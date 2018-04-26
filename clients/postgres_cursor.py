@@ -1,5 +1,9 @@
 #! usr/bin/env python3
 import psycopg2
+import sys
+import os
+from create_tables import get_conn_string
+
 """
 functions in module :
 	get_cursor
@@ -9,10 +13,6 @@ functions in module :
     execute_cursor
 """
 
-def get_conn_string():
-    with open("../postgres_connection_string","r") as f:
-        return f.read().strip()
-
 def get_cursor():
     global CURSOR
     global CONNECTION
@@ -20,12 +20,9 @@ def get_cursor():
     conn_string = get_conn_string()
     CONNECTION = psycopg2.connect(conn_string)
     CURSOR = CONNECTION.cursor()
-#    print(CURSOR)
-
 
 def execute_cursor(stmt):
     global CURSOR
-#    print("\n{}\n".format("executing {}".format(stmt)))
     CURSOR.execute(stmt)
 
 def execute_query(query):

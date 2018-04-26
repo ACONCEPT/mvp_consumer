@@ -1,1 +1,0 @@
-host='test-ops-data.cfb6v3hjtond.us-west-2.rds.amazonaws.com'  port='5432' user='joe' dbname='MVPDATA' password ='postgrespassword' 
