@@ -36,7 +36,6 @@ def generate_insert_statement(**kwargs):
     columns = ", ".join(cols)
     values = ", " .join(vals)
     stmt = base_stmt.format(table,columns, values)
-    print(stmt)
     return stmt
 
 
@@ -53,9 +52,16 @@ def consume_test_topic():
         try:
             get_cursor()
             val = json.loads(message.value)
-            insert_args["table"]="transformed_{}".format(val.pop("table"))
+            table = val.pop("table")
+            insert_args["table"]="transformed_{}".format(table)
             insert_args["id"]=val.pop("id")
             insert_args["attrs"] = json.dumps(val)
+            print("=" * 50)
+            print(" " * 15 + "TRANSFORMED SQL RECORD")
+            print("ORIGINAL TABLE {}, NEW TABLE {}".format(table,insert_args["table"]))
+            for key, item in insert_args.items():
+                  print("COLUMN : {}".format(key))
+                  print("VALUE : {}".format(value))
             insert_statement = generate_insert_statement(**insert_args)
             execute_cursor(insert_statement)
             commit_connection()
