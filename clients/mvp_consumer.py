@@ -1,5 +1,6 @@
 import sys
 from kafka import KafkaConsumer
+import os
 from postgres_cursor import  get_cursor, execute_cursor,close_cursor,commit_connection
 from queries import get_base_table_descriptions
 import json
@@ -19,11 +20,9 @@ def generate_insert_statement(**kwargs):
     for column,data in kwargs.items():
         column_type = column_definitions.get(column,False)
         if not column_type:
-#            print("column type for column {} not found for table {}".format(column,table) )
             print(column_definitions)
         else:
             cols.append(column)
-#            print("column {}, data {} type {}".format(column,data,column_type))
             if "CHAR" in column_type.upper() or "JSON" in column_type.upper():
                 val = "'{}'".format(data)
             elif "INT" in column_type.upper():
@@ -39,11 +38,11 @@ def generate_insert_statement(**kwargs):
     return stmt
 
 
-def consume_test_topic():
+def consume_test_topic(bootstrap_servers):
     insert_args = {}
     consumer = KafkaConsumer("test",\
             group_id  = "test",\
-            bootstrap_servers=['54.218.31.15:9092'],\
+            bootstrap_servers=bootstrap_servers,\
             auto_offset_reset ="smallest",\
             value_deserializer =lambda m: json.loads(m.decode('utf-8')))
     base_insert = "insert into {} ({}) values ({});"
@@ -61,7 +60,7 @@ def consume_test_topic():
             print("ORIGINAL TABLE {}, NEW TABLE {}".format(table,insert_args["table"]))
             for key, item in insert_args.items():
                   print("COLUMN : {}".format(key))
-                  print("VALUE : {}".format(value))
+                  print("VALUE : {}".format(item))
             insert_statement = generate_insert_statement(**insert_args)
             execute_cursor(insert_statement)
             commit_connection()
@@ -71,8 +70,10 @@ def consume_test_topic():
 
 if __name__ == '__main__':
     global DEFINITIONS
+    fn = os.environ.get("HOME") +"/clusterinfo"
+    with open(fn ,"r") as f:
+        bootstrap_servers = ["{}:9092".format(x) for x in f.readlines()]
     get_base_table_descriptions()
     DEFINITIONS = read_table_definitions()
-#    print(DEFINITIONS.get("transformed_parts"))
-    consume_test_topic()
+    consume_test_topic(bootstrap_servers)
 
